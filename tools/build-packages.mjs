@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const version = '0.1.0';
+const version = '0.1.1';
 const outputRoot = path.resolve(process.env.DDYS_DEDE_DIST || path.join(os.tmpdir(), 'ddys-dedecms-plugin-dist'));
 
 const sharedFiles = {

@@ -26,6 +26,11 @@ test('shared core covers settings, API client, proxy, request form, rendering, a
   for (const token of ['movies', 'latest', 'hot', 'search', 'calendar', 'sources', 'collections', 'shares', 'activities', 'types', 'genres', 'regions', 'request_form']) {
     assert.match(core, new RegExp(`'${token}'`));
   }
+  assert.match(core, /function\s+ddys_open_required_arg\s*\(/);
+  assert.match(core, /ddys_open_error\('缺少 '\s*\.\s*\$label\s*\.\s*' 参数/);
+  assert.match(core, /\/collection\/'\s*\.\s*\$slug/);
+  assert.match(core, /\/share\/'\s*\.\s*\$id/);
+  assert.match(core, /\/user\/'\s*\.\s*\$username/);
 });
 
 test('DedeCMS V5 and DedeBIZ V6 entry files use the right system paths', () => {
@@ -67,10 +72,14 @@ test('README is detailed, linked, and avoids misleading wording', () => {
   const en = read('README.md');
   assert.match(zh, /低端影视 API/);
   assert.match(zh, /README\.md/);
-  assert.match(zh, /ddys-dedecms-v5-module-v0\.1\.0\.zip/);
-  assert.match(zh, /ddys-dedebiz-v6-module-v0\.1\.0\.zip/);
+  assert.match(zh, /ddys-dedecms-v5-module-v0\.1\.1\.zip/);
+  assert.match(zh, /ddys-dedebiz-v6-module-v0\.1\.1\.zip/);
   assert.match(zh, /伪静态/);
+  assert.match(zh, /IIS URL Rewrite/);
+  assert.equal(zh.includes('评论' + '、关注'), false);
   assert.match(en, /README\.zh-CN\.md/);
+  assert.match(en, /ddys-dedecms-v5-module-v0\.1\.1\.zip/);
+  assert.match(en, /collection\/\(\[\^\/\]\+\)/);
   const forbidden = new RegExp(['DDYS ' + 'Open API', 'Open' + 'AI', 'GP' + 'T', 'third-party ' + 'CDN', '第三方 ' + 'CDN', '不依赖 ' + 'Composer', '不依赖 ' + 'npm'].join('|'));
   assert.doesNotMatch(zh + en, forbidden);
 });

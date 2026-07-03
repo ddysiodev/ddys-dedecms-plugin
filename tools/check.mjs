@@ -46,6 +46,7 @@ const requiredCoreFunctions = [
   'ddys_open_handle_request_form',
   'ddys_open_render',
   'ddys_open_render_full_page',
+  'ddys_open_required_arg',
   'ddys_open_admin_page',
   'ddys_open_cache_clear',
   'ddys_open_rate_limit',
@@ -219,7 +220,7 @@ for (const [file, size] of Object.entries({
 }
 
 const { out, manifest } = buildPackages();
-assert.equal(manifest.version, '0.1.0');
+assert.equal(manifest.version, '0.1.1');
 assert.equal(manifest.packages.length, 2);
 const v5 = fs.readFileSync(manifest.packages.find((item) => item.id === 'dedecms-v5').xml, 'utf8');
 const v6 = fs.readFileSync(manifest.packages.find((item) => item.id === 'dedebiz-v6').xml, 'utf8');

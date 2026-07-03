@@ -4,7 +4,7 @@ if (!defined('DEDEINC')) {
 }
 
 if (!defined('DDYS_OPEN_VERSION')) {
-    define('DDYS_OPEN_VERSION', '0.1.0');
+    define('DDYS_OPEN_VERSION', '0.1.1');
 }
 if (!defined('DDYS_OPEN_API_DEFAULT')) {
     define('DDYS_OPEN_API_DEFAULT', 'https://ddys.io/api/v1');
@@ -425,6 +425,21 @@ function ddys_open_page_url($view = 'latest', $params = array())
             $suffix = $view === 'movie' ? '' : '/' . $view;
             return ddys_open_append_query($slug === '' ? $base . '/' : $base . '/movie/' . $slug . $suffix, $params);
         }
+        if ($view === 'collection') {
+            $slug = isset($params['slug']) ? rawurlencode(ddys_open_scalar($params['slug'])) : '';
+            unset($params['slug']);
+            return ddys_open_append_query($slug === '' ? $base . '/collection' : $base . '/collection/' . $slug, $params);
+        }
+        if ($view === 'share') {
+            $id = isset($params['id']) ? (int)$params['id'] : 0;
+            unset($params['id']);
+            return ddys_open_append_query($id <= 0 ? $base . '/share' : $base . '/share/' . $id, $params);
+        }
+        if ($view === 'user') {
+            $username = isset($params['username']) ? rawurlencode(ddys_open_scalar($params['username'])) : '';
+            unset($params['username']);
+            return ddys_open_append_query($username === '' ? $base . '/user' : $base . '/user/' . $username, $params);
+        }
         return ddys_open_append_query($base . '/' . rawurlencode($view), $params);
     }
     $query = $view === 'latest' ? $params : array_merge(array('view' => $view), $params);
@@ -718,6 +733,15 @@ function ddys_open_views()
     return array('latest', 'movies', 'hot', 'search', 'calendar', 'movie', 'sources', 'related', 'comments', 'collections', 'collection', 'shares', 'share', 'requests', 'activities', 'user', 'types', 'genres', 'regions', 'request_form');
 }
 
+function ddys_open_required_arg($args, $key, $label)
+{
+    $value = ddys_open_scalar(isset($args[$key]) ? $args[$key] : '');
+    if ($value === '') {
+        return ddys_open_error('缺少 ' . $label . ' 参数。', 400);
+    }
+    return $value;
+}
+
 function ddys_open_render($type, $args = array())
 {
     $type = ddys_open_choice($type, ddys_open_views(), 'latest');
@@ -726,17 +750,33 @@ function ddys_open_render($type, $args = array())
     if ($type === 'hot') return ddys_open_render_list(ddys_open_api_data('/hot', ddys_open_build_query($args, array('type', 'genre', 'region', 'limit'))), $args);
     if ($type === 'search') return ddys_open_render_search($args);
     if ($type === 'calendar') return ddys_open_render_calendar(ddys_open_api_data('/calendar', ddys_open_build_query($args, array('year', 'month'))), $args);
-    if ($type === 'movie') return ddys_open_render_detail(ddys_open_api_data('/movies/' . rawurlencode(ddys_open_scalar(isset($args['slug']) ? $args['slug'] : ''))), $args);
-    if ($type === 'sources') return ddys_open_render_sources(ddys_open_api_data('/movies/' . rawurlencode(ddys_open_scalar(isset($args['slug']) ? $args['slug'] : '')) . '/sources'), $args);
-    if ($type === 'related') return ddys_open_render_list(ddys_open_api_data('/movies/' . rawurlencode(ddys_open_scalar(isset($args['slug']) ? $args['slug'] : '')) . '/related'), $args);
-    if ($type === 'comments') return ddys_open_render_list(ddys_open_api_paginated('/movies/' . rawurlencode(ddys_open_scalar(isset($args['slug']) ? $args['slug'] : '')) . '/comments', ddys_open_build_query($args, array('page', 'per_page'))), $args);
+    if ($type === 'movie' || $type === 'sources' || $type === 'related' || $type === 'comments') {
+        $slug = ddys_open_required_arg($args, 'slug', 'slug');
+        if (ddys_open_is_error($slug)) return ddys_open_render_error($slug, $args);
+        if ($type === 'movie') return ddys_open_render_detail(ddys_open_api_data('/movies/' . rawurlencode($slug)), $args);
+        if ($type === 'sources') return ddys_open_render_sources(ddys_open_api_data('/movies/' . rawurlencode($slug) . '/sources'), $args);
+        if ($type === 'related') return ddys_open_render_list(ddys_open_api_data('/movies/' . rawurlencode($slug) . '/related'), $args);
+        return ddys_open_render_list(ddys_open_api_paginated('/movies/' . rawurlencode($slug) . '/comments', ddys_open_build_query($args, array('page', 'per_page'))), $args);
+    }
     if ($type === 'collections') return ddys_open_render_list(ddys_open_api_paginated('/collections', ddys_open_build_query($args, array('page', 'per_page'))), $args);
-    if ($type === 'collection') return ddys_open_render_detail(ddys_open_api_get('/collections/' . rawurlencode(ddys_open_scalar(isset($args['slug']) ? $args['slug'] : '')), ddys_open_build_query($args, array('page', 'per_page'))), $args);
+    if ($type === 'collection') {
+        $slug = ddys_open_required_arg($args, 'slug', 'slug');
+        if (ddys_open_is_error($slug)) return ddys_open_render_error($slug, $args);
+        return ddys_open_render_detail(ddys_open_api_get('/collections/' . rawurlencode($slug), ddys_open_build_query($args, array('page', 'per_page'))), $args);
+    }
     if ($type === 'shares') return ddys_open_render_list(ddys_open_api_paginated('/shares', ddys_open_build_query($args, array('page', 'per_page'))), $args);
-    if ($type === 'share') return ddys_open_render_detail(ddys_open_api_data('/shares/' . (int)(isset($args['id']) ? $args['id'] : 0)), $args);
+    if ($type === 'share') {
+        $id = (int)(isset($args['id']) ? $args['id'] : 0);
+        if ($id <= 0) return ddys_open_render_error(ddys_open_error('缺少 id 参数。', 400), $args);
+        return ddys_open_render_detail(ddys_open_api_data('/shares/' . $id), $args);
+    }
     if ($type === 'requests') return ddys_open_render_list(ddys_open_api_paginated('/requests', ddys_open_build_query($args, array('page', 'per_page'))), $args);
     if ($type === 'activities') return ddys_open_render_list(ddys_open_api_paginated('/activities', ddys_open_build_query($args, array('type', 'page', 'per_page'))), $args);
-    if ($type === 'user') return ddys_open_render_detail(ddys_open_api_data('/user/' . rawurlencode(ddys_open_scalar(isset($args['username']) ? $args['username'] : ''))), $args);
+    if ($type === 'user') {
+        $username = ddys_open_required_arg($args, 'username', 'username');
+        if (ddys_open_is_error($username)) return ddys_open_render_error($username, $args);
+        return ddys_open_render_detail(ddys_open_api_data('/user/' . rawurlencode($username)), $args);
+    }
     if ($type === 'types') return ddys_open_render_dictionary(ddys_open_api_data('/types'), $args);
     if ($type === 'genres') return ddys_open_render_dictionary(ddys_open_api_data('/genres'), $args);
     if ($type === 'regions') return ddys_open_render_dictionary(ddys_open_api_data('/regions'), $args);
@@ -1150,7 +1190,7 @@ function ddys_open_admin_page()
     $settings = ddys_open_settings();
     $nonce = ddys_open_nonce('admin');
     $self = basename($_SERVER['SCRIPT_NAME']);
-    $shortcode = "{dede:ddys type='latest' row='12'/}\n{dede:ddys type='hot' row='10'/}\n{dede:ddys type='search' q='星际'/}\n{dede:ddys type='calendar' year='2026' month='7'/}\n{dede:ddys type='movie' slug='i-robot'/}\n{dede:ddys type='sources' slug='i-robot'/}\n{dede:ddys type='collections'/}\n{dede:ddys type='request_form'/}";
+    $shortcode = "{dede:ddys type='latest' row='12'/}\n{dede:ddys type='movies' per_page='24'/}\n{dede:ddys type='hot' row='10'/}\n{dede:ddys type='search' q='星际' per_page='12'/}\n{dede:ddys type='calendar' year='2026' month='7'/}\n{dede:ddys type='movie' slug='i-robot'/}\n{dede:ddys type='sources' slug='i-robot'/}\n{dede:ddys type='related' slug='i-robot'/}\n{dede:ddys type='comments' slug='i-robot' per_page='20'/}\n{dede:ddys type='collections' per_page='10'/}\n{dede:ddys type='collection' slug='classic-sci-fi'/}\n{dede:ddys type='shares' per_page='10'/}\n{dede:ddys type='share' id='1'/}\n{dede:ddys type='requests' per_page='10'/}\n{dede:ddys type='activities' per_page='10'/}\n{dede:ddys type='user' username='demo'/}\n{dede:ddys type='types'/}\n{dede:ddys type='genres'/}\n{dede:ddys type='regions'/}\n{dede:ddys type='request_form'/}";
     echo '<!doctype html><html><head><meta charset="' . ddys_open_meta_charset() . '"><title>' . ddys_open_h('低端影视设置') . '</title><style>
 body{font:14px/1.6 Arial,sans-serif;margin:18px;color:#1f2937}.ddys-admin-wrap{max-width:1080px}.ddys-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ddys-admin-box{border:1px solid #d8e0e6;background:#fff;padding:16px}.ddys-admin-box h2{margin:0 0 12px;font-size:16px}.ddys-admin-box label{display:grid;gap:5px;margin:0 0 10px;font-weight:bold}.ddys-admin-box input,.ddys-admin-box select,.ddys-admin-box textarea{box-sizing:border-box;width:100%;padding:7px;border:1px solid #cbd5df}.ddys-admin-actions{display:flex;gap:8px;margin:12px 0}.button{display:inline-block;padding:7px 12px;background:#0f766e;color:#fff;text-decoration:none;border:0;cursor:pointer}.button.secondary{background:#475569}.ddys-admin-message{padding:10px;margin:0 0 12px;border:1px solid #cbd5df}.ddys-admin-success{border-color:#86efac;background:#f0fdf4}.ddys-admin-error{border-color:#fecaca;background:#fef2f2}.ddys-admin-code{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;padding:12px;overflow:auto}@media(max-width:800px){.ddys-admin-grid{grid-template-columns:1fr}}</style></head><body><div class="ddys-admin-wrap"><h1>' . ddys_open_h('低端影视 API 设置') . '</h1>' . $message;
     echo '<div class="ddys-admin-actions"><a class="button secondary" href="' . ddys_open_attr($self . '?op=test&ddys_nonce=' . $nonce) . '">' . ddys_open_h('测试低端影视 API') . '</a><a class="button secondary" href="' . ddys_open_attr($self . '?op=clear&ddys_nonce=' . $nonce) . '">' . ddys_open_h('清理缓存') . '</a><a class="button secondary" target="_blank" href="' . ddys_open_attr(ddys_open_page_url('latest')) . '">' . ddys_open_h('打开前台页面') . '</a></div>';

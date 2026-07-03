@@ -5,14 +5,14 @@
 [低端影视](https://ddys.io/) API 的官方 DedeCMS / DedeBIZ 模块，用于在织梦站点中展示低端影视内容、提供模板标签、本地 JSON 代理、服务端求片、缓存和后台诊断。
 
 - GitHub 仓库：[ddysiodev/ddys-dedecms-plugin](https://github.com/ddysiodev/ddys-dedecms-plugin)
-- GitHub Release：[v0.1.0](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/tag/v0.1.0)
-- DedeCMS V5 安装包：[ddys-dedecms-v5-module-v0.1.0.zip](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/download/v0.1.0/ddys-dedecms-v5-module-v0.1.0.zip)
-- DedeBIZ V6 安装包：[ddys-dedebiz-v6-module-v0.1.0.zip](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/download/v0.1.0/ddys-dedebiz-v6-module-v0.1.0.zip)
+- GitHub Release：[v0.1.1](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/tag/v0.1.1)
+- DedeCMS V5 安装包：[ddys-dedecms-v5-module-v0.1.1.zip](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/download/v0.1.1/ddys-dedecms-v5-module-v0.1.1.zip)
+- DedeBIZ V6 安装包：[ddys-dedebiz-v6-module-v0.1.1.zip](https://github.com/ddysiodev/ddys-dedecms-plugin/releases/download/v0.1.1/ddys-dedebiz-v6-module-v0.1.1.zip)
 
 ## 版本选择
 
-- DedeCMS V5：使用 `ddys-dedecms-v5-module-v0.1.0.zip`。
-- DedeBIZ V6：使用 `ddys-dedebiz-v6-module-v0.1.0.zip`。
+- DedeCMS V5：使用 `ddys-dedecms-v5-module-v0.1.1.zip`。
+- DedeBIZ V6：使用 `ddys-dedebiz-v6-module-v0.1.1.zip`。
 
 DedeBIZ 开启安全模式时，后台模块管理会禁止安装模块，需要先按站点运维策略关闭安全模式或改用手工释放文件。
 
@@ -44,7 +44,7 @@ DedeBIZ 开启安全模式时，后台模块管理会禁止安装模块，需要
 ```text
 API Base URL: https://ddys.io/api/v1
 站点来源 URL: https://ddys.io
-API Key: 可选；求片、评论、关注等服务端鉴权功能需要
+API Key: 可选；求片等服务端提交功能需要
 默认缓存 TTL: 300
 最新/热门缓存 TTL: 300
 列表缓存 TTL: 600
@@ -67,9 +67,12 @@ API Key: 可选；求片、评论、关注等服务端鉴权功能需要
 {dede:ddys type='related' slug='i-robot'/}
 {dede:ddys type='comments' slug='i-robot'/}
 {dede:ddys type='collections' per_page='10'/}
+{dede:ddys type='collection' slug='classic-sci-fi'/}
 {dede:ddys type='shares' per_page='10'/}
+{dede:ddys type='share' id='1'/}
 {dede:ddys type='requests' per_page='10'/}
 {dede:ddys type='activities' per_page='10'/}
+{dede:ddys type='user' username='demo'/}
 {dede:ddys type='types'/}
 {dede:ddys type='genres'/}
 {dede:ddys type='regions'/}
@@ -106,9 +109,12 @@ DedeCMS V5：
 /plus/ddys.php?view=related&slug=i-robot
 /plus/ddys.php?view=comments&slug=i-robot
 /plus/ddys.php?view=collections
+/plus/ddys.php?view=collection&slug=classic-sci-fi
 /plus/ddys.php?view=shares
+/plus/ddys.php?view=share&id=1
 /plus/ddys.php?view=requests
 /plus/ddys.php?view=activities
+/plus/ddys.php?view=user&username=demo
 /plus/ddys.php?view=types
 ```
 
@@ -120,6 +126,9 @@ DedeBIZ V6：
 /apps/ddys.php?view=hot
 /apps/ddys.php?view=search&q=星际
 /apps/ddys.php?view=movie&slug=i-robot
+/apps/ddys.php?view=collection&slug=classic-sci-fi
+/apps/ddys.php?view=share&id=1
+/apps/ddys.php?view=user&username=demo
 ```
 
 ## 本地 JSON 代理
@@ -135,7 +144,10 @@ DedeCMS V5：
 /plus/ddys_api.php?route=sources&slug=i-robot
 /plus/ddys_api.php?route=comments&slug=i-robot
 /plus/ddys_api.php?route=collections&per_page=10
+/plus/ddys_api.php?route=collection&slug=classic-sci-fi
 /plus/ddys_api.php?route=shares&per_page=10
+/plus/ddys_api.php?route=share&id=1
+/plus/ddys_api.php?route=user&username=demo
 /plus/ddys_api.php?route=types
 ```
 
@@ -162,6 +174,9 @@ RewriteRule ^ddys/api/?$ plus/ddys_api.php [L,QSA]
 RewriteRule ^ddys/request-submit/?$ plus/ddys_request.php [L,QSA]
 RewriteRule ^ddys/movie/([^/]+)/?$ plus/ddys.php?view=movie&slug=$1 [L,QSA]
 RewriteRule ^ddys/movie/([^/]+)/(sources|related|comments)/?$ plus/ddys.php?view=$2&slug=$1 [L,QSA]
+RewriteRule ^ddys/collection/([^/]+)/?$ plus/ddys.php?view=collection&slug=$1 [L,QSA]
+RewriteRule ^ddys/share/([0-9]+)/?$ plus/ddys.php?view=share&id=$1 [L,QSA]
+RewriteRule ^ddys/user/([^/]+)/?$ plus/ddys.php?view=user&username=$1 [L,QSA]
 RewriteRule ^ddys/(movies|hot|search|calendar|collections|shares|requests|activities|types|genres|regions)/?$ plus/ddys.php?view=$1 [L,QSA]
 ```
 
@@ -175,8 +190,57 @@ rewrite ^/ddys/api/?$ /plus/ddys_api.php last;
 rewrite ^/ddys/request-submit/?$ /plus/ddys_request.php last;
 rewrite ^/ddys/movie/([^/]+)/?$ /plus/ddys.php?view=movie&slug=$1 last;
 rewrite ^/ddys/movie/([^/]+)/(sources|related|comments)/?$ /plus/ddys.php?view=$2&slug=$1 last;
+rewrite ^/ddys/collection/([^/]+)/?$ /plus/ddys.php?view=collection&slug=$1 last;
+rewrite ^/ddys/share/([0-9]+)/?$ /plus/ddys.php?view=share&id=$1 last;
+rewrite ^/ddys/user/([^/]+)/?$ /plus/ddys.php?view=user&username=$1 last;
 rewrite ^/ddys/(movies|hot|search|calendar|collections|shares|requests|activities|types|genres|regions)/?$ /plus/ddys.php?view=$1 last;
 ```
+
+IIS URL Rewrite：
+```xml
+<rewrite>
+  <rules>
+    <rule name="DDYS page" stopProcessing="true">
+      <match url="^ddys/?$" />
+      <action type="Rewrite" url="plus/ddys.php" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS api" stopProcessing="true">
+      <match url="^ddys/api/?$" />
+      <action type="Rewrite" url="plus/ddys_api.php" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS request" stopProcessing="true">
+      <match url="^ddys/request-submit/?$" />
+      <action type="Rewrite" url="plus/ddys_request.php" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS movie detail" stopProcessing="true">
+      <match url="^ddys/movie/([^/]+)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view=movie&amp;slug={R:1}" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS movie subview" stopProcessing="true">
+      <match url="^ddys/movie/([^/]+)/(sources|related|comments)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view={R:2}&amp;slug={R:1}" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS collection detail" stopProcessing="true">
+      <match url="^ddys/collection/([^/]+)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view=collection&amp;slug={R:1}" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS share detail" stopProcessing="true">
+      <match url="^ddys/share/([0-9]+)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view=share&amp;id={R:1}" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS user detail" stopProcessing="true">
+      <match url="^ddys/user/([^/]+)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view=user&amp;username={R:1}" appendQueryString="true" />
+    </rule>
+    <rule name="DDYS list pages" stopProcessing="true">
+      <match url="^ddys/(movies|hot|search|calendar|collections|shares|requests|activities|types|genres|regions)/?$" />
+      <action type="Rewrite" url="plus/ddys.php?view={R:1}" appendQueryString="true" />
+    </rule>
+  </rules>
+</rewrite>
+```
+
+DedeBIZ V6 把 IIS 规则中的 `plus/` 改为 `apps/`。
 
 ## 开发检查
 
